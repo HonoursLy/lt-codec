@@ -143,5 +143,5 @@ begin
 	);
 
 	-- Generate statement
-	dbg_io1 <= clk_4_tx;
+	dbg_io1 <= rx_clk;
 end architecture arch;
