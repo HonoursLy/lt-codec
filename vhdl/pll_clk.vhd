@@ -14,9 +14,12 @@ architecture rtl of PLL_clk is
 
 	component SB_PLL40_CORE is
 		generic (
+
+            -- fout = fin * (DIVF + 1) / (2^DIVQ * (DIVR + 1))
+
 			FEEDBACK_PATH : string := "SIMPLE";
 			PLLOUT_SELECT : string := "GENCLK";
-			DIVR : integer := 2;
+			DIVR : integer := 3;
 			DIVF : integer := 63;
 			DIVQ : integer := 6;
 			FILTER_RANGE : integer := 4

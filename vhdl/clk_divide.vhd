@@ -1,36 +1,34 @@
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
+LIBRARY IEEE;
+USE IEEE.STD_LOGIC_1164.ALL;
+USE IEEE.numeric_std.all;
 
-entity clk_divider is
-	generic (
-		DIVISOR : positive := 2 -- must be >= 2
-	);
-	port (
-		clk_in : in std_logic;
-		reset : in std_logic;
-		clk_out : out std_logic
-	);
-end entity clk_divider;
+ENTITY clk_divider IS
+    GENERIC (Freq_in : INTEGER := 12500000); -- 50MHz clock on DE-10 Lite FPGA board
+    PORT (
+        clk_in : IN STD_LOGIC;
+        reset : IN STD_LOGIC;
+        clk_out : OUT STD_LOGIC
 
-architecture rtl of clk_divider is
-	signal counter : unsigned(31 downto 0) := (others => '0');
-	signal clk_reg : std_logic := '1';
-begin
-	process (clk_in, reset) is
-	begin
-		if reset = '1' then
-			counter <= (others => '0');
-			clk_reg <= '0';
-		elsif rising_edge(clk_in) then
-			if counter = (DIVISOR / 2 - 1) then
-				counter <= (others => '0');
-				clk_reg <= not clk_reg;
-			else
-				counter <= counter + 1;
-			end if;
-		end if;
-	end process;
+    );
+END clk_divider;
 
-	clk_out <= clk_reg;
-end architecture rtl;
+ARCHITECTURE Behav OF clk_divider IS
+    SIGNAL temp : STD_LOGIC;
+    SIGNAL counter : INTEGER;
+BEGIN
+    frequency_divider : PROCESS (reset, clk_in)
+    BEGIN
+        IF (reset = '1') THEN
+            temp <= '0';
+            counter <= 0;
+        ELSIF rising_edge(clk_in) THEN
+            IF (counter = Freq_in/2) THEN
+                temp <= NOT(temp);
+                counter <= 0;
+            ELSE
+                counter <= counter + 1;
+            END IF;
+        END IF;
+    END PROCESS;
+    clk_out <= temp;
+END Behav;

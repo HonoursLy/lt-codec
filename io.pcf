@@ -21,4 +21,5 @@ set_io byte_out[7] 25
 
 set_io byte_ready 48
 set_io bit_out 6
-set_io rx_clk_out 18
+
+set_io dbg_io1 18

@@ -13,7 +13,7 @@ entity top is
 		bit_out : out STD_LOGIC;
 		byte_out : out STD_LOGIC_VECTOR(7 downto 0);
 		byte_ready : out STD_LOGIC; -- byte ready for wr
-		rx_clk_out : out STD_LOGIC
+		dbg_io1 : out STD_LOGIC
 	);
 end entity top;
 
@@ -75,7 +75,7 @@ architecture arch of top is
 
 	component clk_divider is
 		generic (
-			DIVISOR : positive := 2 -- must be >= 2
+			Freq_in : positive := 16000000
 		);
 		port (
 			clk_in : in std_logic;
@@ -98,7 +98,7 @@ begin
 	RX_PLL_clk: component PLL_clk
 	port map (
 		ref_clk_i => clk_48,
-		rst_n_i => reset,
+		rst_n_i => not reset,
 		outcore_o => rx_clk,
 		outglobal_o => glob_clk
 	);
@@ -134,13 +134,14 @@ begin
 	);
 	tx_clk: component clk_divider
 	generic map (
-		DIVISOR => 16 -- must be >= 2
+		Freq_in => 16
 	)
 	port map (
 		clk_in => rx_clk,
 		reset => reset,
 		clk_out => clk_4_tx
 	);
+
 	-- Generate statement
-	rx_clk_out <= rx_clk;
+	dbg_io1 <= clk_4_tx;
 end architecture arch;
