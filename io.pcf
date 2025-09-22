@@ -1,5 +1,24 @@
-set_io a_i 18
-set_io b_i 19
-set_io c_i 20
+set_io reset 19
+set_io bit_valid 47
 
-set_io d_o 39
+set_io byte_in[0] 46
+set_io byte_in[1] 44
+set_io byte_in[2] 42
+set_io byte_in[3] 37
+set_io byte_in[4] 45
+set_io byte_in[5] 43
+set_io byte_in[6] 38
+set_io byte_in[7] 36
+
+set_io byte_out[0] 32
+set_io byte_out[1] 28
+set_io byte_out[2] 26
+set_io byte_out[3] 23
+set_io byte_out[4] 34
+set_io byte_out[5] 31
+set_io byte_out[6] 27
+set_io byte_out[7] 25
+
+set_io byte_ready 48
+set_io bit_out 6
+set_io rx_clk_out 18
