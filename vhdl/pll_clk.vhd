@@ -20,7 +20,7 @@ architecture rtl of PLL_clk is
 			FEEDBACK_PATH : string := "SIMPLE";
 			PLLOUT_SELECT : string := "GENCLK";
 			DIVR : integer := 3;
-			DIVF : integer := 100;
+			DIVF : integer := 63;
 			DIVQ : integer := 5;
 			FILTER_RANGE : integer := 4
 		);
