@@ -27,7 +27,7 @@ jobs:
       - name: get current date
         id: date
         run: |
-          echo "now=$(date + '%y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
+          echo "now=$(date +'%y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
 
       - name: upload artifacts
         uses: actions/upload-artifact@v4
