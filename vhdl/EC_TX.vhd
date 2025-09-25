@@ -17,13 +17,13 @@ end EC_TX;
 ARCHITECTURE EC_arch OF EC_TX IS
 	-- insert local declarations here
 BEGIN
-	process
+	process (EC_clk, reset)
 	
 	begin
 		IF reset = '1' THEN
 			LT_out <= (others => '0');
-		ELSIF EC_ENA = '1' THEN
-			if rising_edge(EC_clk) THEN
+		ELSIF rising_edge(EC_clk)  THEN
+			if EC_ENA = '1' THEN
 				LT_out <= EC_in & "01";
 			end if;
 		end if;
