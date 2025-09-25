@@ -11,10 +11,10 @@ entity top is
 	port (
 		-- enter port declarations here
 		reset : in STD_LOGIC;
-		byte_in : in STD_LOGIC_VECTOR(BITS downto 0);
+		byte_in : in STD_LOGIC_VECTOR(BITS-1 downto 0);
 		bit_valid : out STD_LOGIC;
 		bit_out : out STD_LOGIC;
-		byte_out : out STD_LOGIC_VECTOR(BITS downto 0);
+		byte_out : out STD_LOGIC_VECTOR(BITS-1 downto 0);
 		byte_ready : out STD_LOGIC; -- byte ready for wr
 		dbg_io1 : out STD_LOGIC
 	);
