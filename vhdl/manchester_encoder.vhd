@@ -5,7 +5,7 @@ use IEEE.std_logic_1164.all;
 entity manchester_encoder is
 	generic(
 		BITS : INTEGER := 10 -- Number of bits being encoded
-	)
+	);
 	port (
 		clk : in STD_LOGIC;
 		message : in STD_LOGIC_VECTOR(BITS-1 downto 0);
