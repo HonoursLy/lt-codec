@@ -2,10 +2,11 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity manchester_decoder is
+entity manchester_receiver is
 	generic (
 		OVERSAMPLE : natural := 16; -- oversample factor (must match PLL output)
-		BAUD : natural := 1000000 -- Manchester bit rate
+		BAUD : natural := 1000000; -- Manchester bit rate
+		BITS : INTEGER := 10 -- Number of bits being processed out
 	);
 	port (
 		clk_ovs : in std_logic; -- oversample clock from PLL (OVERSAMPLE BAUD)
@@ -13,23 +14,23 @@ entity manchester_decoder is
 		man_in : in std_logic; -- Manchester encoded input
 		bit_valid : out std_logic; -- one-cycle pulse when bit_out is valid
 		bit_out : out std_logic; -- decoded bit
-		byte_out : out std_logic_vector(7 downto 0);
+		byte_out : out std_logic_vector(BITS-1 downto 0);
 		byte_ready : out std_logic -- pulse when byte_out is valid
 	);
-end entity manchester_decoder;
+end entity manchester_receiver;
 
-architecture rtl of manchester_decoder is
+architecture rtl of manchester_receiver is
 	signal man_sync : std_logic_vector(2 downto 0) := (others => '0');
 	signal prev_level : std_logic := '0';
 	signal tick_count : integer range 0 to OVERSAMPLE * 2 := 0;
-	signal bit_cnt : integer range 0 to 7 := 0;
-	signal byte_shift : std_logic_vector(7 downto 0) := (others => '0');
+	signal bit_cnt : integer range 0 to BITS-1 := 0;
+	signal byte_shift : std_logic_vector(BITS-1 downto 0) := (others => '0');
 	--signal prev_bit : std_logic := '1';
 
 	signal bit_out_r : std_logic := '0';
 	signal bit_valid_r : std_logic := '0';
 	signal byte_ready_r : std_logic := '0';
-	signal byte_out_r : std_logic_vector(7 downto 0) := (others => '0');
+	signal byte_out_r : std_logic_vector(BITS-1 downto 0) := (others => '0');
 begin
 
 	bit_out <= bit_out_r;
@@ -78,9 +79,9 @@ begin
 						end if;
 						bit_valid_r <= '1';
 						--prev_bit <= bit_out_r;
-						byte_shift <= byte_shift(6 downto 0) & man_sync(2);
-						if bit_cnt = 7 then
-							byte_out_r <= byte_shift(6 downto 0) & man_sync(2);
+						byte_shift <= byte_shift(BITS-2 downto 0) & man_sync(2);
+						if bit_cnt = BITS-1 then
+							byte_out_r <= byte_shift(BITS-2 downto 0) & man_sync(2);
 							byte_ready_r <= '1';
 							bit_cnt <= 0;
 						else
@@ -99,9 +100,9 @@ begin
 							bit_out_r <= '0';
 						end if;
 						bit_valid_r <= '1';
-						byte_shift <= byte_shift(6 downto 0) & man_sync(2);
-						if bit_cnt = 7 then
-							byte_out_r <= byte_shift(6 downto 0) & man_sync(2);
+						byte_shift <= byte_shift(BITS-2 downto 0) & man_sync(2);
+						if bit_cnt = BITS-1 then
+							byte_out_r <= byte_shift(BITS-2 downto 0) & man_sync(2);
 							byte_ready_r <= '1';
 							bit_cnt <= 0;
 						else

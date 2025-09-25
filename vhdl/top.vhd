@@ -35,10 +35,11 @@ architecture arch of top is
 		);
 	end component PLL_clk;
 
-	component manchester_decoder is
+	component manchester_receiver is
 		generic (
 			OVERSAMPLE : natural := 16; -- oversample factor (must match PLL output)
-			BAUD : natural := 1000000 -- Manchester bit rate
+			BAUD : natural := 1000000; -- Manchester bit rate
+			BITS : INTEGER := 10 -- Number of bits being processed out
 		);
 		port (
 			clk_ovs : in std_logic; -- oversample clock from PLL (OVERSAMPLE BAUD)
@@ -46,10 +47,10 @@ architecture arch of top is
 			man_in : in std_logic; -- Manchester encoded input
 			bit_valid : out std_logic; -- one-cycle pulse when bit_out is valid
 			bit_out : out std_logic; -- decoded bit
-			byte_out : out std_logic_vector(7 downto 0);
+			byte_out : out std_logic_vector(BITS-1 downto 0);
 			byte_ready : out std_logic -- pulse when byte_out is valid
 		);
-	end component manchester_decoder;
+	end component manchester_receiver;
 
 	component SB_HFOSC is
 		generic (
@@ -62,16 +63,17 @@ architecture arch of top is
 		);
 	end component SB_HFOSC;
 
-	component transmitter is
+	component manchester_encoder is
+		generic(
+			BITS : INTEGER := 10 -- Number of bits being encoded
+		)
 		port (
 			clk : in STD_LOGIC;
-			message : in STD_LOGIC_VECTOR(7 downto 0);
+			message : in STD_LOGIC_VECTOR(BITS-1 downto 0);
 			dout : out STD_LOGIC;
 			reset : in STD_LOGIC
-			-- Make clock four times length
-			-- Add pin for when new parallel is ready
 		);
-	end component transmitter;
+	end component manchester_encoder;
 
 	component clk_divider is
 		generic (
@@ -84,16 +86,6 @@ architecture arch of top is
 		);
 	end component clk_divider;
 begin
-	-- insert synthesizable code here
-
-	-- Process statement
-
-	-- Concurrent signal assignment
-
-	-- Conditional signal assignment
-
-	-- Selected signal assignment
-
 	-- Component instantiation statement
 	RX_PLL_clk: component PLL_clk
 	port map (
@@ -102,10 +94,11 @@ begin
 		outcore_o => rx_clk,
 		outglobal_o => glob_clk
 	);
-	uut: component manchester_decoder
+	uut: component manchester_receiver
 	generic map (
 		OVERSAMPLE => 16, -- oversample factor (must match PLL output) must be even number. oversample - 2
-		BAUD => 1000000 -- Manchester bit rate
+		BAUD => 1000000, -- Manchester bit rate
+		BITS => 10
 	)
 	port map (
 		clk_ovs => rx_clk,
@@ -125,7 +118,10 @@ begin
 		CLKHFPU => '1',
 		CLKHF => clk_48
 	);
-	txt: component transmitter
+	txt: component manchester_encoder
+	generic map (
+		BITS => 10
+	)
 	port map (
 		clk => clk_4_tx,
 		message => byte_in,
