@@ -9,8 +9,8 @@ entity EC_RX is
 		EC_clk : in STD_LOGIC;
 		EC_ENA : in STD_LOGIC;
 		reset : in STD_LOGIC;
-		LT_in : in STD_LOGIC_VECTOR (9 DOWNTO 0)
-        EC_out : out STD_LOGIC_VECTOR(7 DOWNTO 0);
+		LT_in : in STD_LOGIC_VECTOR (9 DOWNTO 0);
+        EC_out : out STD_LOGIC_VECTOR(7 DOWNTO 0)
 	);
 end EC_RX;
 
