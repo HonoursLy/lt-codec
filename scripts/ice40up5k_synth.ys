@@ -13,6 +13,8 @@ ghdl --std=08 -fsynopsys -frelaxed-rules \
 	vhdl/manchester_receiver.vhd \
 	vhdl/clk_divide.vhd \
 	vhdl/pll_clk.vhd \
+	vhdl/EC_RX.vhd\
+	vhdl/EC_TX.vhd\
 	-e top;
 
 # synthesize yosys IR into ice40 primatives

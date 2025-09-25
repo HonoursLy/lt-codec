@@ -6,7 +6,7 @@ use ieee.numeric_std.all;
 
 entity top is
 	generic (
-		BITS : INTEGER := 10 -- Input number of bits to codec
+		BITS : INTEGER := 8 -- Input number of bits to EC
 	);
 	port (
 		-- enter port declarations here
@@ -27,6 +27,9 @@ architecture arch of top is
 	signal rx_clk : STD_LOGIC;
 	signal man_in : STD_LOGIC;
 	signal clk_4_tx : STD_LOGIC;
+	signal byte_clk : STD_LOGIC;
+	signal tx_byte : STD_LOGIC_VECTOR (BITS+1 downto 0);
+	signal rx_byte : STD_LOGIC_VECTOR (BITS+1 downto 0);
 
 	-- takes 48MHz -> 16MHz
 	component PLL_clk is
@@ -88,6 +91,28 @@ architecture arch of top is
 			clk_out : out std_logic
 		);
 	end component clk_divider;
+
+	component EC_RX is
+
+		port(
+			EC_clk : in STD_LOGIC;
+			EC_ENA : in STD_LOGIC;
+			reset : in STD_LOGIC;
+			LT_in : in STD_LOGIC_VECTOR (9 DOWNTO 0);
+			EC_out : out STD_LOGIC_VECTOR(7 DOWNTO 0)
+		);
+	end component;
+
+	component EC_TX is
+
+		port(
+			EC_in : in STD_LOGIC_VECTOR(7 DOWNTO 0);
+			EC_clk : in STD_LOGIC;
+			EC_ENA : in STD_LOGIC;
+			reset : in STD_LOGIC;
+			LT_out : out STD_LOGIC_VECTOR (9 DOWNTO 0)
+		);
+	end component;
 begin
 	-- Component instantiation statement
 	RX_PLL_clk: component PLL_clk
@@ -109,8 +134,8 @@ begin
 		man_in => man_in,
 		bit_valid => bit_valid,
 		bit_out => bit_out,
-		byte_out => byte_out,
-		byte_ready => byte_ready
+		byte_out => RX_byte,
+		byte_ready => byte_clk
 	);
 	u_osc: component SB_HFOSC
 	generic map (
@@ -127,7 +152,7 @@ begin
 	)
 	port map (
 		clk => clk_4_tx,
-		message => byte_in,
+		message => TX_byte,
 		dout => man_in,
 		reset => reset
 	);
@@ -140,7 +165,25 @@ begin
 		reset => reset,
 		clk_out => clk_4_tx
 	);
+	ECTX : component EC_TX
+	port map (
+		EC_in => byte_in,
+		EC_clk => byte_clk,
+		EC_ENA => not reset,
+		reset => reset,
+		LT_out => TX_byte
+	);
+
+	ECRX : component EC_RX
+	port map(
+		EC_clk => byte_clk,
+		EC_ENA => not reset,
+		reset => reset,
+		LT_in => RX_byte,
+        EC_out => byte_out
+	);
 
 	-- Generate statement
 	dbg_io1 <= rx_clk;
+	byte_ready <= byte_clk;
 end architecture arch;
