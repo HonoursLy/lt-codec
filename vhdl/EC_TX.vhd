@@ -1,33 +1,33 @@
 -- Library and Use statements for IEEE packages
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+USE ieee.numeric_std.ALL;
 
-entity EC_TX is
+ENTITY EC_TX IS
 
-	port(
-		EC_in : in STD_LOGIC_VECTOR(7 DOWNTO 0);
-		EC_clk : in STD_LOGIC;
-		EC_ENA : in STD_LOGIC;
-		reset : in STD_LOGIC;
-		LT_out : out STD_LOGIC_VECTOR (9 DOWNTO 0)
+	PORT (
+		EC_in : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+		EC_clk : IN STD_LOGIC;
+		EC_ENA : IN STD_LOGIC;
+		reset : IN STD_LOGIC;
+		RAM_out : OUT STD_LOGIC_VECTOR (9 DOWNTO 0)
+		RAM_ready : OUT STD_LOGIC;
 	);
-end EC_TX;
+END EC_TX;
 
 ARCHITECTURE EC_arch OF EC_TX IS
 	-- insert local declarations here
 BEGIN
-	process (EC_clk, reset)
-	
-	begin
+	PROCESS (EC_clk, reset)
+
+	BEGIN
 		IF reset = '1' THEN
-			LT_out <= (others => '0');
-		ELSIF rising_edge(EC_clk)  THEN
-			if EC_ENA = '1' THEN
-				LT_out <= EC_in & "01";
-			end if;
-		end if;
-	end process;
-
-
+			RAM_out <= (OTHERS => '0');
+		ELSIF rising_edge(EC_clk) THEN
+			IF EC_ENA = '1' THEN
+				RAM_ready <= '1';
+				RAM_out <= "01" & EC_in;
+			END IF;
+		END IF;
+	END PROCESS;
 END EC_arch;
