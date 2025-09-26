@@ -231,7 +231,7 @@ BEGIN
 		rd_addr => rd_addr_i
 	);
 
-	RAM_TX : ram
+	RAM_TX : bram_2048x10
 	GENERIC MAP(
 		addr_width => 11, -- 2048x10
 		data_width => 10
