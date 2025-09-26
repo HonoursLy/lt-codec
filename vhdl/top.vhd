@@ -232,16 +232,12 @@ BEGIN
 	);
 
 	RAM_TX : bram_2048x10
-	GENERIC MAP(
-		addr_width => 11, -- 2048x10
-		data_width => 10
-	)
 	PORT MAP(
-		wclk => wr_clk,
+		wclk => byte_clk,
 		we => wr_en,
 		waddr => wr_addr_i,
 		din => TX_byte,
-		rclk => rd_clk,
+		rclk => byte_clk,
 		re => rd_en,
 		raddr => rd_addr_i,
 		dout => lt_tx_byte
