@@ -32,6 +32,7 @@ ARCHITECTURE arch OF top IS
 	SIGNAL rd_en : STD_LOGIC := '0';
 	SIGNAL lt_tx_byte : STD_LOGIC_VECTOR (BITS + 1 DOWNTO 0);
 	SIGNAL lt_rx_byte : STD_LOGIC_VECTOR (BITS + 1 DOWNTO 0);
+	SIGNAL tx_length : STD_LOGIC_VECTOR (10 DOWNTO 0) := "11111111100"; -- length of TX message
 	-- takes 48MHz -> 16MHz
 	COMPONENT PLL_clk IS
 		PORT (
@@ -209,7 +210,7 @@ BEGIN
 										rd_en => rd_en,
 										wr_data => TX_byte,
 										rd_data => lt_tx_byte,
-										tx_length => "11111111100"
+										tx_length => tx_length
 									);
 									-- Generate statement
 									-- make a FSM with indicators of state. need a rd_en for the TX RAM.
