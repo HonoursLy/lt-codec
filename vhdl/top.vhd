@@ -54,7 +54,7 @@ ARCHITECTURE arch OF top IS
 			man_in : IN STD_LOGIC; -- Manchester encoded input
 			bit_valid : OUT STD_LOGIC; -- one-cycle pulse when bit_out is valid
 			bit_out : OUT STD_LOGIC; -- decoded bit
-			byte_out : OUT STD_LOGIC_VECTOR(BITS - 1 DOWNTO 0)
+			byte_out : OUT STD_LOGIC_VECTOR(BITS - 1 DOWNTO 0);
 			byte_ready : OUT STD_LOGIC -- pulse when byte_out is valid
 		);
 	END COMPONENT manchester_receiver;
