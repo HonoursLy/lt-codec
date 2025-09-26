@@ -11,34 +11,15 @@ ENTITY TX_RAM IS
 		reset : IN STD_LOGIC;
 		wr_en : IN STD_LOGIC;
 		rd_en : IN STD_LOGIC;
-		wr_data : IN STD_LOGIC_VECTOR (9 DOWNTO 0);
-		rd_data : OUT STD_LOGIC_VECTOR (9 DOWNTO 0);
-		tx_length : IN STD_LOGIC_VECTOR (10 DOWNTO 0)
+		tx_length : IN STD_LOGIC_VECTOR (10 DOWNTO 0);
+		wr_addr : OUT STD_LOGIC_VECTOR (10 DOWNTO 0);
+		rd_addr : OUT STD_LOGIC_VECTOR (10 DOWNTO 0)
 	);
 END ENTITY TX_RAM;
 
 ARCHITECTURE arch OF TX_RAM IS
 	SIGNAL w_count : STD_LOGIC_VECTOR (10 DOWNTO 0) := "00000000000";
 	SIGNAL r_count : STD_LOGIC_VECTOR (10 DOWNTO 0) := "00000000000";
-	SIGNAL wr_addr_i : STD_LOGIC_VECTOR (10 DOWNTO 0);
-	SIGNAL rd_addr_i : STD_LOGIC_VECTOR (10 DOWNTO 0);
-
-	COMPONENT bram_2048x10
-		PORT (
-			-- Write port
-			wclk : IN STD_LOGIC;
-			we : IN STD_LOGIC;
-			waddr : IN STD_LOGIC_VECTOR(10 DOWNTO 0); -- 2048 deep
-			din : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
-
-			-- Read port
-			rclk : IN STD_LOGIC;
-			re : IN STD_LOGIC;
-			raddr : IN STD_LOGIC_VECTOR(10 DOWNTO 0);
-			dout : OUT STD_LOGIC_VECTOR(9 DOWNTO 0)
-		);
-	END COMPONENT;
-
 BEGIN
 
 	PROCESS (wr_clk, reset)
@@ -70,22 +51,6 @@ BEGIN
 		END IF;
 	END PROCESS;
 
-	RAM_TX : COMPONENT ram
-		GENERIC MAP(
-			addr_width => 11, -- 2048x10
-			data_width => 10
-		)
-		PORT MAP(
-			wclk => wr_clk,
-			we => wr_en,
-			waddr => wr_addr_i,
-			din => wr_data,
-			rclk => rd_clk,
-			re => rd_en,
-			raddr => rd_addr_i,
-			dout => rd_data
-		);
-
-		wr_addr_i <= w_count;
-		rd_addr_i <= r_count;
-	END ARCHITECTURE arch;
+	wr_addr <= w_count;
+	rd_addr <= r_count;
+END ARCHITECTURE arch;

@@ -33,6 +33,8 @@ ARCHITECTURE arch OF top IS
 	SIGNAL lt_tx_byte : STD_LOGIC_VECTOR (BITS + 1 DOWNTO 0);
 	SIGNAL lt_rx_byte : STD_LOGIC_VECTOR (BITS + 1 DOWNTO 0);
 	SIGNAL tx_length : STD_LOGIC_VECTOR (10 DOWNTO 0) := "11111111100"; -- length of TX message
+	SIGNAL wr_addr_i : STD_LOGIC_VECTOR (10 DOWNTO 0);
+	SIGNAL rd_addr_i : STD_LOGIC_VECTOR (10 DOWNTO 0);
 	-- takes 48MHz -> 16MHz
 	COMPONENT PLL_clk IS
 		PORT (
@@ -124,97 +126,129 @@ ARCHITECTURE arch OF top IS
 			reset : IN STD_LOGIC;
 			wr_en : IN STD_LOGIC;
 			rd_en : IN STD_LOGIC;
-			wr_data : IN STD_LOGIC_VECTOR (9 DOWNTO 0);
-			rd_data : OUT STD_LOGIC_VECTOR (9 DOWNTO 0);
-			tx_length : IN STD_LOGIC_VECTOR (10 DOWNTO 0)
+			tx_length : IN STD_LOGIC_VECTOR (10 DOWNTO 0);
+			wr_addr : OUT STD_LOGIC_VECTOR (10 DOWNTO 0);
+			rd_addr : OUT STD_LOGIC_VECTOR (10 DOWNTO 0)
+		);
+	END COMPONENT;
+
+	COMPONENT bram_2048x10
+		PORT (
+			-- Write port
+			wclk : IN STD_LOGIC;
+			we : IN STD_LOGIC;
+			waddr : IN STD_LOGIC_VECTOR(10 DOWNTO 0); -- 2048 deep
+			din : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
+
+			-- Read port
+			rclk : IN STD_LOGIC;
+			re : IN STD_LOGIC;
+			raddr : IN STD_LOGIC_VECTOR(10 DOWNTO 0);
+			dout : OUT STD_LOGIC_VECTOR(9 DOWNTO 0)
 		);
 	END COMPONENT;
 BEGIN
 	-- Component instantiation statement
-	RX_PLL_clk : COMPONENT PLL_clk
-		PORT MAP(
-			ref_clk_i => clk_48,
-			rst_n_i => NOT reset,
-			outcore_o => rx_clk,
-			outglobal_o => glob_clk
-		);
-		uut : COMPONENT manchester_receiver
-			GENERIC MAP(
-				OVERSAMPLE => 16, -- oversample factor (must match PLL output) must be even number. oversample - 2
-				BAUD => 1000000, -- Manchester bit rate
-				BITS => 10
-			)
-			PORT MAP(
-				clk_ovs => rx_clk,
-				reset => reset,
-				man_in => man_in,
-				bit_valid => bit_valid,
-				bit_out => bit_out,
-				byte_out => RX_byte,
-				byte_ready => byte_clk
-			);
-			u_osc : COMPONENT SB_HFOSC
-				GENERIC MAP(
-					CLKHF_DIV => "0b00"
-				)
-				PORT MAP(
-					CLKHFEN => '1',
-					CLKHFPU => '1',
-					CLKHF => clk_48
-				);
+	RX_PLL_clk : PLL_clk
+	PORT MAP(
+		ref_clk_i => clk_48,
+		rst_n_i => NOT reset,
+		outcore_o => rx_clk,
+		outglobal_o => glob_clk
+	);
+	uut : manchester_receiver
+	GENERIC MAP(
+		OVERSAMPLE => 16, -- oversample factor (must match PLL output) must be even number. oversample - 2
+		BAUD => 1000000, -- Manchester bit rate
+		BITS => 10
+	)
+	PORT MAP(
+		clk_ovs => rx_clk,
+		reset => reset,
+		man_in => man_in,
+		bit_valid => bit_valid,
+		bit_out => bit_out,
+		byte_out => RX_byte,
+		byte_ready => byte_clk
+	);
+	u_osc : SB_HFOSC
+	GENERIC MAP(
+		CLKHF_DIV => "0b00"
+	)
+	PORT MAP(
+		CLKHFEN => '1',
+		CLKHFPU => '1',
+		CLKHF => clk_48
+	);
 
-				txt : COMPONENT manchester_encoder
-					GENERIC MAP(
-						BITS => 10
-					)
-					PORT MAP(
-						clk => clk_4_tx,
-						message => lt_tx_byte,
-						dout => man_in,
-						reset => reset
-					);
-					tx_clk : COMPONENT clk_divider
-						GENERIC MAP(
-							Freq_in => 16
-						)
-						PORT MAP(
-							clk_in => rx_clk,
-							reset => reset,
-							clk_out => clk_4_tx
-						);
-						ECTX : COMPONENT EC_TX
-							PORT MAP(
-								EC_in => byte_in,
-								EC_clk => byte_clk,
-								EC_ENA => NOT reset,
-								reset => reset,
-								RAM_out => TX_byte,
-								RAM_ready => wr_en
-							);
+	txt : manchester_encoder
+	GENERIC MAP(
+		BITS => 10
+	)
+	PORT MAP(
+		clk => clk_4_tx,
+		message => lt_tx_byte,
+		dout => man_in,
+		reset => reset
+	);
+	tx_clk : clk_divider
+	GENERIC MAP(
+		Freq_in => 16
+	)
+	PORT MAP(
+		clk_in => rx_clk,
+		reset => reset,
+		clk_out => clk_4_tx
+	);
+	ECTX : EC_TX
+	PORT MAP(
+		EC_in => byte_in,
+		EC_clk => byte_clk,
+		EC_ENA => NOT reset,
+		reset => reset,
+		RAM_out => TX_byte,
+		RAM_ready => wr_en
+	);
 
-							ECRX : COMPONENT EC_RX
-								PORT MAP(
-									EC_clk => byte_clk,
-									EC_ENA => NOT reset,
-									reset => reset,
-									LT_in => RX_byte,
-									EC_out => byte_out
-								);
-								EC_TX_LT : COMPONENT TX_RAM
-									PORT MAP(
-										-- enter port declarations here
-										wr_clk => byte_clk,
-										rd_clk => byte_clk,
-										reset => reset,
-										wr_en => wr_en,
-										rd_en => rd_en,
-										wr_data => TX_byte,
-										rd_data => lt_tx_byte,
-										tx_length => tx_length
-									);
-									-- Generate statement
-									-- make a FSM with indicators of state. need a rd_en for the TX RAM.
-									dbg_io1 <= rx_clk;
-									byte_ready <= byte_clk;
-									rd_en <= wr_en;
-								END ARCHITECTURE arch;
+	ECRX : EC_RX
+	PORT MAP(
+		EC_clk => byte_clk,
+		EC_ENA => NOT reset,
+		reset => reset,
+		LT_in => RX_byte,
+		EC_out => byte_out
+	);
+	EC_TX_LT : TX_RAM
+	PORT MAP(
+		-- enter port declarations here
+		wr_clk => byte_clk,
+		rd_clk => byte_clk,
+		reset => reset,
+		wr_en => wr_en,
+		rd_en => rd_en,
+		tx_length => tx_length,
+		wr_addr => wr_addr_i,
+		rd_addr => rd_addr_i
+	);
+
+	RAM_TX : ram
+	GENERIC MAP(
+		addr_width => 11, -- 2048x10
+		data_width => 10
+	)
+	PORT MAP(
+		wclk => wr_clk,
+		we => wr_en,
+		waddr => wr_addr_i,
+		din => TX_byte,
+		rclk => rd_clk,
+		re => rd_en,
+		raddr => rd_addr_i,
+		dout => lt_tx_byte
+	);
+	-- Generate statement
+	-- make a FSM with indicators of state. need a rd_en for the TX RAM.
+	dbg_io1 <= rx_clk;
+	byte_ready <= byte_clk;
+	rd_en <= wr_en;
+END ARCHITECTURE arch;
