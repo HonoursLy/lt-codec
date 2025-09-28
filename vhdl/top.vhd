@@ -130,90 +130,90 @@ ARCHITECTURE arch OF top IS
 	END COMPONENT;
 BEGIN
 	-- Component instantiation statement
-	RX_PLL_clk : COMPONENT PLL_clk
+	RX_PLL_clk : PLL_clk
 		PORT MAP(
 			ref_clk_i => clk_48,
 			rst_n_i => NOT reset,
 			outcore_o => rx_clk,
 			outglobal_o => glob_clk
 		);
-		uut : COMPONENT manchester_receiver
-			GENERIC MAP(
-				OVERSAMPLE => 16, -- oversample factor (must match PLL output) must be even number. oversample - 2
-				BAUD => 1000000, -- Manchester bit rate
-				BITS => 10
-			)
-			PORT MAP(
-				clk_ovs => rx_clk,
-				reset => reset,
-				man_in => man_in,
-				bit_valid => bit_valid,
-				bit_out => bit_out,
-				byte_out => RX_byte,
-				byte_ready => byte_clk
-			);
-			u_osc : COMPONENT SB_HFOSC
-				GENERIC MAP(
-					CLKHF_DIV => "0b00"
-				)
-				PORT MAP(
-					CLKHFEN => '1',
-					CLKHFPU => '1',
-					CLKHF => clk_48
-				);
+	uut : manchester_receiver
+		GENERIC MAP(
+			OVERSAMPLE => 16, -- oversample factor (must match PLL output) must be even number. oversample - 2
+			BAUD => 1000000, -- Manchester bit rate
+			BITS => 10
+		)
+		PORT MAP(
+			clk_ovs => rx_clk,
+			reset => reset,
+			man_in => man_in,
+			bit_valid => bit_valid,
+			bit_out => bit_out,
+			byte_out => RX_byte,
+			byte_ready => byte_clk
+		);
+	u_osc : SB_HFOSC
+		GENERIC MAP(
+			CLKHF_DIV => "0b00"
+		)
+		PORT MAP(
+			CLKHFEN => '1',
+			CLKHFPU => '1',
+			CLKHF => clk_48
+		);
 
-				txt : COMPONENT manchester_encoder
-					GENERIC MAP(
-						BITS => 10
-					)
-					PORT MAP(
-						clk => clk_4_tx,
-						message => lt_tx_byte,
-						dout => man_in,
-						reset => reset
-					);
-					tx_clk : COMPONENT clk_divider
-						GENERIC MAP(
-							Freq_in => 16
-						)
-						PORT MAP(
-							clk_in => rx_clk,
-							reset => reset,
-							clk_out => clk_4_tx
-						);
-						ECTX : COMPONENT EC_TX
-							PORT MAP(
-								EC_in => byte_in,
-								EC_clk => byte_clk,
-								EC_ENA => NOT reset,
-								reset => reset,
-								RAM_out => TX_byte,
-								RAM_ready => wr_en
-							);
+	txt : manchester_encoder
+		GENERIC MAP(
+			BITS => 10
+		)
+		PORT MAP(
+			clk => clk_4_tx,
+			message => lt_tx_byte,
+			dout => man_in,
+			reset => reset
+		);
+	tx_clk : clk_divider
+		GENERIC MAP(
+			Freq_in => 16
+		)
+		PORT MAP(
+			clk_in => rx_clk,
+			reset => reset,
+			clk_out => clk_4_tx
+		);
+	ECTX : EC_TX
+		PORT MAP(
+			EC_in => byte_in,
+			EC_clk => byte_clk,
+			EC_ENA => NOT reset,
+			reset => reset,
+			RAM_out => TX_byte,
+			RAM_ready => wr_en
+		);
 
-							ECRX : COMPONENT EC_RX
-								PORT MAP(
-									EC_clk => byte_clk,
-									EC_ENA => NOT reset,
-									reset => reset,
-									LT_in => RX_byte,
-									EC_out => byte_out
-								);
-								EC_TX_LT : COMPONENT TX_RAM
-									PORT MAP(
-										-- enter port declarations here
-										wr_clk => byte_clk,
-										rd_clk => byte_clk,
-										reset => reset,
-										wr_en => wr_en,
-										rd_en => rd_en,
-										wr_data => TX_byte,
-										rd_data => lt_tx_byte,
-										tx_length => "11111111100"
-									);
-									-- Generate statement
-									-- make a FSM with indicators of state. need a rd_en for the TX RAM.
-									dbg_io1 <= rx_clk;
-									byte_ready <= byte_clk;
-									rd_en <= wr_en;
-								END ARCHITECTURE arch;
+	ECRX : EC_RX
+		PORT MAP(
+			EC_clk => byte_clk,
+			EC_ENA => NOT reset,
+			reset => reset,
+			LT_in => RX_byte,
+			EC_out => byte_out
+		);
+	EC_TX_LT : TX_RAM
+		PORT MAP(
+			-- enter port declarations here
+			wr_clk => byte_clk,
+			rd_clk => byte_clk,
+			reset => reset,
+			wr_en => wr_en,
+			rd_en => rd_en,
+			wr_data => TX_byte,
+			rd_data => lt_tx_byte,
+			tx_length => "11111111100"
+		);
+		-- Generate statement
+		-- make a FSM with indicators of state. need a rd_en for the TX RAM.
+		dbg_io1 <= rx_clk;
+		byte_ready <= byte_clk;
+		rd_en <= wr_en;
+	END ARCHITECTURE arch;
